@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login • Nightfall</title>
+  <meta name="color-scheme" content="dark" />
+  <style>
+    :root{
+      --bg:#0b0b0f;
+      --panel:#0f1117cc; /* translucent */
+      --panel-solid:#0f1117; /* fallback */
+      --text:#e5e7eb;
+      --muted:#a3a3a3;
+      --accent: #7c3aed; /* violet */
+      --accent-2:#06b6d4; /* cyan */
+      --error:#ef4444;
+      --ring: 0 0 0 2px var(--accent);
+      --radius: 18px;
+      --shadow: 0 10px 30px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.06) inset;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color:var(--text); background: var(--bg); overflow: hidden;
+    }
+
+    /* Animated gradient + grid background */
+    .bg{
+      position: fixed; inset: 0; z-index: -2; background:
+        radial-gradient(1200px 800px at 10% 10%, rgba(124,58,237,.18), transparent 60%),
+        radial-gradient(1000px 600px at 80% 20%, rgba(6,182,212,.16), transparent 60%),
+        radial-gradient(900px 700px at 50% 90%, rgba(139,92,246,.12), transparent 60%),
+        var(--bg);
+      filter: saturate(110%);
+      animation: float 20s linear infinite alternate;
+    }
+    @keyframes float { to { transform: translate3d(0,-2%,0); } }
+
+    .grid{ position: fixed; inset:0; z-index:-1; opacity:.25; background-image:
+      linear-gradient(transparent 23px, rgba(255,255,255,.05) 24px),
+      linear-gradient(90deg, transparent 23px, rgba(255,255,255,.05) 24px);
+      background-size: 24px 24px, 24px 24px;
+      mask-image: radial-gradient(600px 600px at 50% 50%, black, transparent 85%);
+    }
+
+    .container{
+      min-height:100dvh; display:grid; place-items:center; padding:24px;
+    }
+
+    .card{
+      width: min(440px, 92vw);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      background-color: var(--panel);
+      backdrop-filter: blur(12px) saturate(120%);
+      -webkit-backdrop-filter: blur(12px) saturate(120%);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255,255,255,.08);
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before{ /* subtle glow ring */
+      content:""; position:absolute; inset:-2px; border-radius: inherit;
+      background: conic-gradient(from 180deg at 50% 50%, var(--accent), var(--accent-2), var(--accent));
+      filter: blur(24px) saturate(140%);
+      opacity: .12; z-index:0;
+    }
+
+    .header{ position:relative; z-index:1; display:flex; align-items:center; gap:12px; margin-bottom: 18px; }
+    .logo{
+      width:40px; aspect-ratio:1; border-radius: 12px; display:grid; place-items:center; color:white;
+      background: radial-gradient(circle at 30% 30%, var(--accent), transparent 60%),
+                  radial-gradient(circle at 70% 70%, var(--accent-2), transparent 60%),
+                  #0e0f14;
+      box-shadow: 0 6px 18px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.06) inset;
+      font-weight:700;
+    }
+    .title{ font-size: 1.15rem; font-weight: 700; letter-spacing:.3px; }
+    .subtitle{ color: var(--muted); font-size:.9rem; margin-top:2px; }
+
+    form{ position:relative; z-index:1; display:grid; gap:14px; margin-top: 10px; }
+
+    label{ font-size:.9rem; color:#d1d5db; margin-bottom:6px; display:block; }
+
+    .field{ display:grid; gap:6px; }
+
+    .input{
+      width:100%; padding:14px 14px; border-radius: 14px; border:1px solid rgba(255,255,255,.09);
+      background: rgba(15,17,23,.7); color:var(--text); outline: none;
+      transition: border-color .2s ease, box-shadow .2s ease, transform .05s ease;
+    }
+    .input:focus{ box-shadow: var(--ring); border-color: transparent; }
+    .input::placeholder{ color:#7a7a7a; }
+
+    .row{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+
+    .checkbox{
+      display:inline-flex; align-items:center; gap:10px; cursor:pointer; user-select:none; color:#c7c7c7;
+      font-size:.9rem;
+    }
+    .checkbox input{ appearance:none; width:20px; height:20px; border-radius:6px; border:1px solid rgba(255,255,255,.15); display:grid; place-items:center; }
+    .checkbox input:checked{ background: linear-gradient(135deg, var(--accent), var(--accent-2)); border-color: transparent; }
+    .checkbox input:checked::after{ content:"✓"; font-size:.85rem; }
+
+    .btn{
+      width:100%; padding:14px 16px; border-radius: 14px; border:1px solid rgba(255,255,255,.12);
+      background: linear-gradient(135deg, var(--accent), var(--accent-2)); color:white; font-weight:700;
+      letter-spacing:.3px; cursor:pointer; transition: transform .05s ease, filter .2s ease;
+      box-shadow: 0 10px 24px rgba(124,58,237,.25), 0 2px 0 rgba(0,0,0,.2) inset;
+    }
+    .btn:hover{ filter: brightness(1.06); }
+    .btn:active{ transform: translateY(1px); }
+
+    .alt{ margin-top:10px; text-align:center; color: var(--muted); font-size:.9rem; }
+    .alt a{ color:#c4b5fd; text-decoration:none; }
+    .alt a:hover{ text-decoration:underline; }
+
+    .pw-toggle{ position:absolute; right:12px; top:50%; transform: translateY(-50%); border:none; background:transparent; color:#bdbdbd; cursor:pointer; padding:6px 8px; border-radius:8px; }
+    .pw-toggle:focus{ outline: none; box-shadow: var(--ring); }
+
+    .input-wrap{ position:relative; }
+
+    .error{ color: var(--error); font-size:.85rem; min-height:1.1em; }
+
+    footer{ position:fixed; inset:auto 0 10px 0; display:grid; place-items:center; color: #7d7d7d; font-size:.85rem; pointer-events:none; }
+
+    @media (max-width: 380px){ .title{ font-size:1.05rem } }
+
+    @media (prefers-reduced-motion: reduce){
+      .bg{ animation: none; }
+      .btn, .input { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="grid" aria-hidden="true"></div>
+  <main class="container">
+    <section class="card" aria-label="Login form">
+      <header class="header">
+        <div class="logo" aria-hidden="true">Ｎ</div>
+        <div>
+          <div class="title">Nightfall Login</div>
+          <div class="subtitle">Welcome back — please sign in</div>
+        </div>
+      </header>
+
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="email">Email</label>
+          <input class="input" id="email" name="email" type="email" inputmode="email" placeholder="you@example.com" autocomplete="username" required />
+          <div class="error" id="emailError" role="status" aria-live="polite"></div>
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="input-wrap">
+            <input class="input" id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" minlength="6" required />
+            <button class="pw-toggle" type="button" aria-label="Show password" id="togglePw">👁️</button>
+          </div>
+          <div class="error" id="pwError" role="status" aria-live="polite"></div>
+        </div>
+
+        <div class="row">
+          <label class="checkbox">
+            <input type="checkbox" id="remember" name="remember" />
+            <span>Remember me</span>
+          </label>
+          <a class="alt" style="margin:0" href="#">Forgot password?</a>
+        </div>
+
+        <button class="btn" type="submit">Sign In</button>
+        <div class="alt">No account? <a href="#">Create one</a></div>
+      </form>
+    </section>
+  </main>
+  <footer>© <span id="year"></span> Nightfall UI • Crafted for dark mode</footer>
+
+  <script>
+    // Year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Password toggle
+    const pw = document.getElementById('password');
+    const toggle = document.getElementById('togglePw');
+    toggle.addEventListener('click', () => {
+      const showing = pw.type === 'text';
+      pw.type = showing ? 'password' : 'text';
+      toggle.textContent = showing ? '👁️' : '🙈';
+      toggle.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+      pw.focus();
+    });
+
+    // Simple client-side validation demo
+    const form = document.getElementById('loginForm');
+    const email = document.getElementById('email');
+    const emailError = document.getElementById('emailError');
+    const pwError = document.getElementById('pwError');
+
+    function validateEmail() {
+      if (!email.value) { emailError.textContent = 'Email is required.'; return false; }
+      if (!email.checkValidity()) { emailError.textContent = 'Enter a valid email address.'; return false; }
+      emailError.textContent = ''; return true;
+    }
+
+    function validatePw(){
+      if (!pw.value) { pwError.textContent = 'Password is required.'; return false; }
+      if (pw.value.length < 6) { pwError.textContent = 'Use at least 6 characters.'; return false; }
+      pwError.textContent = ''; return true;
+    }
+
+    email.addEventListener('input', validateEmail);
+    pw.addEventListener('input', validatePw);
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const ok = validateEmail() & validatePw();
+      if (!ok) return;
+      // Demo-only: pretend we submitted
+      form.querySelector('.btn').disabled = true;
+      form.querySelector('.btn').textContent = 'Signing in…';
+      setTimeout(() => {
+        alert('Logged in! (demo)');
+        form.querySelector('.btn').disabled = false;
+        form.querySelector('.btn').textContent = 'Sign In';
+      }, 800);
+    });
+  </script>
+</body>
+</html>
